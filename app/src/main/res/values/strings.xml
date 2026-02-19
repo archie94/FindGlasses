@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">FindGlasses</string>
+    <string name="camera_permission_rationale">Camera permission is required to detect glasses in real-time.</string>
+    <string name="permission_denied">Camera permission was denied. Please grant it in Settings.</string>
+    <string name="grant_permission">Grant Permission</string>
+</resources>

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:developers.google.com)",
+      "WebFetch(domain:blog.stackademic.com)",
+      "WebFetch(domain:jordan-mungujakisa.medium.com)",
+      "Bash(gradle wrapper:*)",
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(java --version:*)",
+      "Bash(/usr/libexec/java_home:*)",
+      "Bash(./gradlew:*)"
+    ]
+  }
+}
