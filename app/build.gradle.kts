@@ -59,7 +59,7 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
 
-    implementation(libs.mlkit.objectdetection)
+    implementation(libs.mediapipe.tasks.vision)
 
     implementation(libs.accompanist.permissions)
 }

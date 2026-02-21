@@ -27,7 +27,11 @@ fun CameraPreview(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
-    val objectDetector = remember { GlassesDetector.create() }
+
+    // MediaPipe detector delivers results via its own listener callback
+    val objectDetector = remember {
+        GlassesDetector.create(context, onResult = onDetections)
+    }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -60,7 +64,7 @@ fun CameraPreview(
                     .also {
                         it.setAnalyzer(
                             analysisExecutor,
-                            GlassesAnalyzer(objectDetector, onDetections)
+                            GlassesAnalyzer(objectDetector)
                         )
                     }
 

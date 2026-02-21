@@ -1,18 +1,62 @@
 package com.ultrahuman.findglasses.detection
 
-import com.google.mlkit.vision.objects.ObjectDetection
-import com.google.mlkit.vision.objects.ObjectDetector
-import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions
+import android.content.Context
+import android.graphics.RectF
+import com.google.mediapipe.framework.image.MPImage
+import com.google.mediapipe.tasks.core.BaseOptions
+import com.google.mediapipe.tasks.vision.objectdetector.ObjectDetector
+import com.google.mediapipe.tasks.vision.objectdetector.ObjectDetectorResult
 
+/**
+ * Factory that creates a MediaPipe [ObjectDetector] configured for live-stream
+ * (async) inference using the bundled EfficientDet-Lite0 model.
+ */
 object GlassesDetector {
 
-    fun create(): ObjectDetector {
-        val options = ObjectDetectorOptions.Builder()
-            .setDetectorMode(ObjectDetectorOptions.STREAM_MODE)
-            .enableClassification()
-            .enableMultipleObjects()
+    private const val MODEL_ASSET = "efficientdet_lite0.tflite"
+    private const val MAX_RESULTS = 5
+    private const val SCORE_THRESHOLD = 0.5f
+
+    fun create(
+        context: Context,
+        onResult: (List<DetectionResult>, imageWidth: Int, imageHeight: Int) -> Unit
+    ): ObjectDetector {
+        val baseOptions = BaseOptions.builder()
+            .setModelAssetPath(MODEL_ASSET)
             .build()
 
-        return ObjectDetection.getClient(options)
+        val options = ObjectDetector.ObjectDetectorOptions.builder()
+            .setBaseOptions(baseOptions)
+            .setRunningMode(com.google.mediapipe.tasks.vision.core.RunningMode.LIVE_STREAM)
+            .setMaxResults(MAX_RESULTS)
+            .setScoreThreshold(SCORE_THRESHOLD)
+            .setResultListener { result: ObjectDetectorResult, input: MPImage ->
+                val detections = result.detections().map { detection ->
+                    val category = detection.categories().firstOrNull()
+                    val box = detection.boundingBox()
+                    DetectionResult(
+                        boundingBox = toRect(box),
+                        label = category?.categoryName() ?: "Unknown",
+                        confidence = category?.score() ?: 0f,
+                        trackingId = null
+                    )
+                }
+                onResult(detections, input.width, input.height)
+            }
+            .setErrorListener { e ->
+                android.util.Log.e("GlassesDetector", "Detection error", e)
+            }
+            .build()
+
+        return ObjectDetector.createFromOptions(context, options)
     }
+
+    /** Converts a MediaPipe [RectF] bounding box to an Android [android.graphics.Rect]. */
+    private fun toRect(box: RectF): android.graphics.Rect =
+        android.graphics.Rect(
+            box.left.toInt(),
+            box.top.toInt(),
+            box.right.toInt(),
+            box.bottom.toInt()
+        )
 }

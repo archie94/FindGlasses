@@ -5,47 +5,32 @@ import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.objects.ObjectDetector
+import com.google.mediapipe.framework.image.BitmapImageBuilder
+import com.google.mediapipe.tasks.vision.objectdetector.ObjectDetector
 
+/**
+ * CameraX [ImageAnalysis.Analyzer] that feeds each frame into a
+ * MediaPipe [ObjectDetector] running in LIVE_STREAM mode.
+ *
+ * Results are delivered asynchronously through the listener registered
+ * when the detector was created (see [GlassesDetector]).
+ */
 class GlassesAnalyzer(
-    private val objectDetector: ObjectDetector,
-    private val onDetectionResult: (List<DetectionResult>, imageWidth: Int, imageHeight: Int) -> Unit
+    private val objectDetector: ObjectDetector
 ) : ImageAnalysis.Analyzer {
 
     @OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
-        val mediaImage = imageProxy.image ?: run {
+        val bitmap = imageProxy.toBitmap()
+
+        try {
+            val mpImage = BitmapImageBuilder(bitmap).build()
+            val timestampMs = imageProxy.imageInfo.timestamp / 1_000 // microseconds -> milliseconds
+            objectDetector.detectAsync(mpImage, timestampMs)
+        } catch (e: Exception) {
+            Log.e("GlassesAnalyzer", "Failed to run detection", e)
+        } finally {
             imageProxy.close()
-            return
         }
-
-        val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-        val inputImage = InputImage.fromMediaImage(mediaImage, rotationDegrees)
-
-        // Compute post-rotation dimensions for correct bounding box mapping
-        val isRotated = rotationDegrees == 90 || rotationDegrees == 270
-        val effectiveWidth = if (isRotated) imageProxy.height else imageProxy.width
-        val effectiveHeight = if (isRotated) imageProxy.width else imageProxy.height
-
-        objectDetector.process(inputImage)
-            .addOnSuccessListener { detectedObjects ->
-                val results = detectedObjects.map { obj ->
-                    val label = obj.labels.firstOrNull()
-                    DetectionResult(
-                        boundingBox = obj.boundingBox,
-                        label = label?.text ?: "Unknown",
-                        confidence = label?.confidence ?: 0f,
-                        trackingId = obj.trackingId
-                    )
-                }
-                onDetectionResult(results, effectiveWidth, effectiveHeight)
-            }
-            .addOnFailureListener { e ->
-                Log.e("GlassesAnalyzer", "Detection failed", e)
-            }
-            .addOnCompleteListener {
-                imageProxy.close()
-            }
     }
 }

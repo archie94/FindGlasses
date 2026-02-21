@@ -12,6 +12,9 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import com.ultrahuman.findglasses.detection.DetectionResult
 
+// COCO category names that could correspond to eyeglasses or sunglasses
+private val GLASSES_LABELS = setOf("eyeglasses", "sunglasses")
+
 @Composable
 fun DetectionOverlay(
     detections: List<DetectionResult>,
@@ -38,8 +41,8 @@ fun DetectionOverlay(
             val right = rect.right * scale + offsetX
             val bottom = rect.bottom * scale + offsetY
 
-            val isFashionGood = detection.label.equals("Fashion good", ignoreCase = true)
-            val boxColor = if (isFashionGood) Color.Green else Color.Yellow
+            val isGlasses = GLASSES_LABELS.any { it.equals(detection.label, ignoreCase = true) }
+            val boxColor = if (isGlasses) Color.Green else Color.Yellow
 
             drawRect(
                 color = boxColor,
@@ -50,7 +53,7 @@ fun DetectionOverlay(
 
             drawIntoCanvas { canvas ->
                 val paint = Paint().apply {
-                    color = if (isFashionGood) {
+                    color = if (isGlasses) {
                         android.graphics.Color.GREEN
                     } else {
                         android.graphics.Color.YELLOW
@@ -61,11 +64,7 @@ fun DetectionOverlay(
                 }
 
                 val labelText = buildString {
-                    if (isFashionGood) {
-                        append("Glasses?")
-                    } else {
-                        append(detection.label)
-                    }
+                    append(detection.label)
                     if (detection.confidence > 0f) {
                         append(" (${(detection.confidence * 100).toInt()}%)")
                     }

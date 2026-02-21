@@ -3,7 +3,7 @@ agp = "8.13.2"
 kotlin = "2.3.10"
 composeBom = "2026.02.00"
 cameraX = "1.5.3"
-mlkitObjectDetection = "17.0.2"
+mediapipeVision = "0.10.21"
 accompanistPermissions = "0.37.3"
 activityCompose = "1.12.4"
 lifecycleRuntimeKtx = "2.10.0"
@@ -26,7 +26,7 @@ androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.r
 androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraX" }
 androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraX" }
 
-mlkit-objectdetection = { module = "com.google.mlkit:object-detection", version.ref = "mlkitObjectDetection" }
+mediapipe-tasks-vision = { module = "com.google.mediapipe:tasks-vision", version.ref = "mediapipeVision" }
 
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
 
