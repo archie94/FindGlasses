@@ -14,13 +14,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.ultrahuman.findglasses.detection.DetectionModel
 import com.ultrahuman.findglasses.detection.DetectionResult
 import com.ultrahuman.findglasses.detection.GlassesAnalyzer
 import com.ultrahuman.findglasses.detection.GlassesDetector
 import java.util.concurrent.Executors
 
+/**
+ * Camera preview that runs object detection using the specified [model].
+ *
+ * Callers should wrap this with `key(model)` so the entire composable is
+ * torn down and recreated when the model changes — this guarantees a clean
+ * detector lifecycle without duplicating camera-binding logic.
+ */
 @Composable
 fun CameraPreview(
+    model: DetectionModel,
     modifier: Modifier = Modifier,
     onDetections: (List<DetectionResult>, imageWidth: Int, imageHeight: Int) -> Unit
 ) {
@@ -28,9 +37,8 @@ fun CameraPreview(
     val lifecycleOwner = LocalLifecycleOwner.current
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
 
-    // MediaPipe detector delivers results via its own listener callback
     val objectDetector = remember {
-        GlassesDetector.create(context, onResult = onDetections)
+        GlassesDetector.create(context, model = model, onResult = onDetections)
     }
 
     DisposableEffect(Unit) {

@@ -9,20 +9,20 @@ import com.google.mediapipe.tasks.vision.objectdetector.ObjectDetectorResult
 
 /**
  * Factory that creates a MediaPipe [ObjectDetector] configured for live-stream
- * (async) inference using the bundled EfficientDet-Lite0 model.
+ * (async) inference using the selected [DetectionModel].
  */
 object GlassesDetector {
 
-    private const val MODEL_ASSET = "efficientdet_lite0.tflite"
     private const val MAX_RESULTS = 5
     private const val SCORE_THRESHOLD = 0.5f
 
     fun create(
         context: Context,
+        model: DetectionModel = DetectionModel.EFFICIENTDET_LITE0,
         onResult: (List<DetectionResult>, imageWidth: Int, imageHeight: Int) -> Unit
     ): ObjectDetector {
         val baseOptions = BaseOptions.builder()
-            .setModelAssetPath(MODEL_ASSET)
+            .setModelAssetPath(model.assetFileName)
             .build()
 
         val options = ObjectDetector.ObjectDetectorOptions.builder()
